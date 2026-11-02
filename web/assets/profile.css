@@ -284,3 +284,16 @@ dialog.aurea-dialog::backdrop{background:#111a2aa8;backdrop-filter:blur(7px)}
 @media(max-width:680px){.aurea-exam-header{padding:13px 15px}.aurea-exam-badge{display:none}.aurea-exam-content{padding:13px}.aurea-exam-content .page-head h1{font-size:23px}.aurea-exam-content .split{display:flex;flex-direction:column;gap:11px}.aurea-exam-content .question-nav{justify-content:center}}
 @media(max-width:420px){.aurea-dialog-actions{flex-direction:column-reverse}.aurea-dialog-inner{padding:22px}}
 @media(prefers-reduced-motion:reduce){.aurea-focus-lock{animation:none!important}}
+
+/* Pantalla de inicio: la misma gema, colores y tipografía del tema seleccionado. */
+.splash-screen__title{color:var(--copper);}
+.splash-screen__sub,.splash-screen__recovery{color:var(--copper);}
+.splash-screen__loading span{background:linear-gradient(90deg,var(--orange),var(--amber));}
+:root[data-theme=amber] .splash-screen,
+:root[data-theme=jade] .splash-screen,
+:root[data-theme=indigo] .splash-screen{
+ background:radial-gradient(ellipse at 50% 27%,#fffefa 0%,var(--theme-tint) 72%,var(--theme-soft) 100%);
+}
+:root[data-theme=amber] .splash-screen__loading,
+:root[data-theme=jade] .splash-screen__loading,
+:root[data-theme=indigo] .splash-screen__loading{background:var(--theme-soft);}
