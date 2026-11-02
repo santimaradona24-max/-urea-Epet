@@ -20,13 +20,28 @@ const paths={
  arrow:'M4 12h16 M14 6l6 6-6 6'
 };
 const icon=(id,size=18)=>`<svg width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[id]||paths.paper}"/></svg>`;
-const state={route:'home',id:'',tab:'questions',token:sessionStorage.getItem('aurea_auth')||localStorage.getItem('aurea_auth')||'',user:null,online:false,catalog:{subjects:[],exams:[]},subjects:[],exams:[],subjectExams:[],exam:null,results:[],students:[],staff:[],unlinked:[],report:[],profile:null,preview:[],attempt:null,filter:'',busy:false,submitting:false,expiryQueued:false,examResetting:false,examFullscreenRequired:false,live:null,review:null,gradingMode:'automatic',questionType:'choice',lastLiveFetch:0,studentMonitor:null,studentMonitorAttempt:null,myProfile:null,directory:[],knownUser:localStorage.getItem('aurea_known_user')||'',ownerData:null,routeFetched:{},routeVersion:0,loadingRoute:false,community:{tab:'posts',posts:[],people:[],comments:{},page:0,more:false,query:'',loaded:false},communityImage:null};
+const state={route:'home',id:'',tab:'questions',token:sessionStorage.getItem('aurea_auth')||localStorage.getItem('aurea_auth')||'',user:null,online:null,catalog:{subjects:[],exams:[]},subjects:[],exams:[],subjectExams:[],exam:null,results:[],students:[],staff:[],unlinked:[],report:[],profile:null,preview:[],attempt:null,filter:'',busy:false,submitting:false,expiryQueued:false,examResetting:false,examFullscreenRequired:false,live:null,review:null,gradingMode:'automatic',questionType:'choice',lastLiveFetch:0,studentMonitor:null,studentMonitorAttempt:null,myProfile:null,directory:[],knownUser:localStorage.getItem('aurea_known_user')||'',ownerData:null,routeFetched:{},routeVersion:0,loadingRoute:false,community:{tab:'posts',posts:[],people:[],comments:{},page:0,more:false,query:'',loaded:false},communityImage:null};
 try{state.attempt=JSON.parse(sessionStorage.getItem('aurea_attempt')||'null')}catch{}
 async function call(fn,action,data={}){
  let res;try{res=await fetch(BASE+fn,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...data,action,...(state.token?{staff_token:state.token}:{})}),cache:'no-store'});}catch{throw Error('No se pudo conectar al servidor. Verificá tu conexión.')}
  const dataOut=await res.json().catch(()=>({error:'Respuesta incorrecta del servidor'}));
  if(!res.ok)throw Error(dataOut.error||'La operación no se completó');
  return dataOut;
+}
+async function checkServerHealth(){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6000);
+ let connected=false;
+ try{
+  const response=await fetch(BASE+'campus-health',{method:'GET',cache:'no-store',signal:controller.signal});
+  connected=response.ok&&(await response.text()).trim()==='ok';
+ }catch(e){connected=false;}finally{clearTimeout(timer);}
+ state.online=connected;
+ document.querySelectorAll('.topbar .server').forEach(el=>{
+  el.classList.toggle('offline',!connected);el.classList.remove('checking');
+  el.textContent=connected?'Conectado':'Sin conexión';
+  el.title=connected?'Servidor académico disponible':'No se pudo comprobar el servidor. Reintentando automáticamente.';
+ });
+ return connected;
 }
 const api=(a,d)=>call('campus-api',a,d), users=(a,d)=>call('campus-users',a,d),assess=(a,d)=>call('campus-assessment',a,d),profileAPI=(a,d)=>call('campus-profile',a,d),ownerAPI=(a,d)=>call('campus-owner',a,d),communityAPI=(a,d)=>call('campus-community',a,d);
 function toast(message,bad=false){const t=$('#toast');if(!t)return;t.textContent=String(message);t.className=bad?'show error':'show';clearTimeout(toast.id);toast.id=setTimeout(()=>t.className='',4700)}
@@ -91,7 +106,7 @@ const formatLink=(r)=>({home:'Inicio',catalog:'Catálogo',login:'Acceso',registe
 function shell(inner){
  if(state.route==='take'&&state.attempt)return '<div class="aurea-exam-shell"><header class="aurea-exam-header"><span class="gem"></span><div><strong>Áurea · Evaluación en curso</strong><small>Modo concentración · Tu tiempo continúa aunque cambies de aplicación</small></div><span class="aurea-exam-badge">Sesión activa</span></header><main class="aurea-exam-content">'+inner+'</main><footer class="aurea-exam-footer">Las respuestas se sincronizan con el servidor. No cierres el navegador antes de entregar.</footer></div>';
  const items=nav(),name=state.user?.display_name||'EPET N.º 6';
- return `<div class="app-shell"><aside class="sidebar"><div class="logo"><span class="gem"></span><div><div class="wordmark">Áurea</div><div class="logo-sub">Campus académico · EPET 6</div></div></div><div class="nav-label">Navegación</div><nav>${items.map(([r,t,i])=>`<button class="nav-link ${state.route===r?'active':''}" data-go="${r}">${icon(i)}${t}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="identity"><div class="avatar">${esc(name.charAt(0).toUpperCase())}</div><div><strong>${esc(name)}</strong><small>${titleRole(access())}</small></div></div>${state.user?`<button class="nav-link" data-action="logout" style="margin-top:9px">${icon('logout')}Cerrar sesión</button>`:''}<p style="font-size:10px;margin:14px 7px;color:#b0a18f">EPET N.º 6 · San Juan</p></div></aside><div class="main-wrap"><div class="topbar"><span class="crumb">EPET N.º 6 &nbsp;/&nbsp; <strong>${formatLink(state.route)}</strong></span><div class="top-actions"><span class="server ${state.online?'':'offline'}">${state.online?'Conectado':'Sin conexión'}</span>${state.user?`<span class="avatar" style="height:33px;width:33px">${esc(name.charAt(0).toUpperCase())}</span>`:''}</div></div><main class="content">${inner}<div class="footer-note">EPET N.º 6 · Plataforma de evaluaciones y seguimiento académico. Datos privados protegidos mediante cuentas personales.</div></main></div></div><nav class="mobilebar" aria-label="Navegación principal">${items.filter(([r])=>['home','student-exams','exams','grades','community','account'].includes(r)).slice(0,4).map(([r,t,i])=>`<button class="mobile-link ${state.route===r?'active':''}" data-go="${r}">${icon(i)}<span>${t}</span></button>`).join('')}<button class="mobile-link" type="button" data-action="mobile-more" aria-label="Más secciones" aria-expanded="false">${icon('gear')}<span>Más</span></button></nav><div class="mobile-more-sheet" id="mobile-more-sheet" aria-hidden="true"><div class="mobile-more-header"><strong>Explorar Áurea</strong><button class="btn ghost small" type="button" data-action="mobile-more">Cerrar</button></div>${items.map(([r,t,i])=>`<button class="mobile-more-link ${state.route===r?'active':''}" type="button" data-go="${r}">${icon(i)}<span>${t}</span></button>`).join('')}</div>`;
+ return `<div class="app-shell"><aside class="sidebar"><div class="logo"><span class="gem"></span><div><div class="wordmark">Áurea</div><div class="logo-sub">Campus académico · EPET 6</div></div></div><div class="nav-label">Navegación</div><nav>${items.map(([r,t,i])=>`<button class="nav-link ${state.route===r?'active':''}" data-go="${r}">${icon(i)}${t}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="identity"><div class="avatar">${esc(name.charAt(0).toUpperCase())}</div><div><strong>${esc(name)}</strong><small>${titleRole(access())}</small></div></div>${state.user?`<button class="nav-link" data-action="logout" style="margin-top:9px">${icon('logout')}Cerrar sesión</button>`:''}<p style="font-size:10px;margin:14px 7px;color:#b0a18f">EPET N.º 6 · San Juan</p></div></aside><div class="main-wrap"><div class="topbar"><span class="crumb">EPET N.º 6 &nbsp;/&nbsp; <strong>${formatLink(state.route)}</strong></span><div class="top-actions"><span class="server ${state.online===false?'offline':state.online===null?'checking':''}" title="Estado de conexión al servidor académico">${state.online===true?'Conectado':state.online===false?'Sin conexión':'Verificando...'}</span>${state.user?`<span class="avatar" style="height:33px;width:33px">${esc(name.charAt(0).toUpperCase())}</span>`:''}</div></div><main class="content">${inner}<div class="footer-note">EPET N.º 6 · Plataforma de evaluaciones y seguimiento académico. Datos privados protegidos mediante cuentas personales.</div></main></div></div><nav class="mobilebar" aria-label="Navegación principal">${items.filter(([r])=>['home','student-exams','exams','grades','community','account'].includes(r)).slice(0,4).map(([r,t,i])=>`<button class="mobile-link ${state.route===r?'active':''}" data-go="${r}">${icon(i)}<span>${t}</span></button>`).join('')}<button class="mobile-link" type="button" data-action="mobile-more" aria-label="Más secciones" aria-expanded="false">${icon('gear')}<span>Más</span></button></nav><div class="mobile-more-sheet" id="mobile-more-sheet" aria-hidden="true"><div class="mobile-more-header"><strong>Explorar Áurea</strong><button class="btn ghost small" type="button" data-action="mobile-more">Cerrar</button></div>${items.map(([r,t,i])=>`<button class="mobile-more-link ${state.route===r?'active':''}" type="button" data-go="${r}">${icon(i)}<span>${t}</span></button>`).join('')}</div>`;
 }
 function examRows(items,mode='public'){
  if(!items.length)return empty('No hay evaluaciones','Cuando haya convocatorias, aparecerán en esta lista.');
@@ -320,7 +335,7 @@ function detailsTabOriginal(){
  return `<div class="split">${panel('Ficha académica',`<div class="list"><div class="list-row"><span>Materia</span><strong>${esc(e.subject?.name||'')}</strong></div><div class="list-row"><span>Duración</span><strong>${e.duration_minutes} minutos</strong></div><div class="list-row"><span>Aprobación</span><strong>${e.passing_percent}%</strong></div><div class="list-row"><span>Estado</span>${pill(e.status)}</div>${e.starts_at?`<div class="list-row"><span>Desde</span><strong>${new Date(e.starts_at).toLocaleString('es-AR')}</strong></div>`:''}${e.ends_at?`<div class="list-row"><span>Hasta</span><strong>${new Date(e.ends_at).toLocaleString('es-AR')}</strong></div>`:''}</div><div class="divider"></div><p style="white-space:pre-wrap">${esc(e.instructions||'Sin instrucciones adicionales.')}</p>`)}
  ${panel('Acciones',e.legacy_readonly?`<p>El historial antiguo permanece inalterable. Podés crear una nueva evaluación a partir de una versión.</p><div class="divider"></div><div class="field"><label>Versión original</label><select id="clone-bank"><option value="3">Versión 3</option><option value="2">Versión 2</option><option value="1">Versión 1</option></select></div>${button('Crear copia editable','clone-exam','primary')}`:e.status==='draft'?`<p style="margin-bottom:15px">Revisá las preguntas antes de publicar. Después de publicar quedarán bloqueadas para evitar cambios durante las entregas.</p>${button('Publicar evaluación','publish','primary')}`:e.status==='published'?`<p style="margin-bottom:15px">La evaluación acepta nuevos alumnos asignados. Cerrarla conserva sus resultados.</p>${button('Cerrar convocatoria','close','danger')}`:'<p>La evaluación está cerrada. Sus registros históricos siguen disponibles para consulta.</p>')}</div>`;
 }
-function detailsTab(){const e=state.exam.exam;return detailsTabOriginal()+(e.legacy_readonly?'':panel('Eliminar evaluación','<p>Solo se elimina si ningún alumno la comenzó. Las notas y entregas quedan protegidas.</p>'+button('Eliminar evaluación','delete-exam','danger')));}
+function detailsTab(){const e=state.exam.exam;return detailsTabOriginal()+(e.legacy_readonly?'':panel('Eliminar evaluación','<p>Solo se elimina si ningún alumno la comenzó. Las notas y entregas quedan protegidas.</p>'+state.user?.platform_owner?button('Eliminar evaluación','owner-delete-academic','danger',`data-id="${esc(e.id)}" data-kind="exam"`):button('Eliminar evaluación','delete-exam','danger')));}
 function reportbook(){
  const r=state.report,people=state.students;
  return title('Libretas y calificaciones','Una carga por alumno, materia, ciclo lectivo y período académico.')+
@@ -821,6 +836,9 @@ setInterval(()=>{if(state.route!=='take'||!state.attempt)return;const left=Math.
 setInterval(()=>{if(state.route==='exam'&&state.tab==='live'&&!state.busy)work(async()=>{state.live=await assess('monitor',{exam_id:state.id});if(state.studentMonitorAttempt)state.studentMonitor=await assess('monitor_student',{exam_id:state.id,attempt_id:state.studentMonitorAttempt});state.lastLiveFetch=Date.now();draw()})},5000);setInterval(()=>{if(state.route==='take'&&state.attempt&&!state.busy)assess('heartbeat',{attempt_id:state.attempt.attempt_id,session_token:state.attempt.session_token}).then(r=>{if(r.expired){toast('Tiempo cumplido');state.attempt=null;sessionStorage.removeItem('aurea_attempt');go('grades')}}).catch(()=>{})},10000);window.addEventListener('hashchange',()=>refresh().catch(e=>toast(e.message,true)));
 (async()=>{
  const bootStarted=Date.now();
+ checkServerHealth().catch(()=>{});
+ setInterval(()=>checkServerHealth().catch(()=>{}),30000);
+ window.addEventListener('online',()=>checkServerHealth().catch(()=>{}));
  try{
    if(state.token){
      try{
@@ -828,16 +846,14 @@ setInterval(()=>{if(state.route==='exam'&&state.tab==='live'&&!state.busy)work(a
        state.knownUser=state.user.username;
        localStorage.setItem('aurea_known_user',state.user.username);
        loadMyProfile().catch(()=>{});
-       state.online=true;
      }catch(e){
        state.user=null;
        if(/sesión|credencial|token|iniciá sesión|autorizad|vencid/i.test(String(e.message||''))){
          state.token='';sessionStorage.removeItem('aurea_auth');localStorage.removeItem('aurea_auth');
        }
-       state.online=false;
      }
    }
- }catch(e){state.online=false}
+ }catch(e){/* Sesión y servidor se verifican independientemente. */}
  finally{
    await new Promise(resolve=>setTimeout(resolve,Math.max(0,820-(Date.now()-bootStarted))));
    try{await refresh();}catch(error){state.route='home';state.id='';draw();toast('No se pudo completar la carga. Volvé a intentar.',true)}
