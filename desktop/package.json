@@ -1,6 +1,6 @@
 {
   "name": "aurea-epet6",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Áurea — EPET N.º 6 para Windows",
   "main": "main.js",
@@ -37,6 +37,20 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Áurea"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "santimaradona24-max",
+        "repo": "-urea-Epet"
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/santimaradona24-max/-urea-Epet.git"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
   }
 }
