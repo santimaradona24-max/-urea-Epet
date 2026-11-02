@@ -1,5 +1,6 @@
 'use strict';
 const { app, BrowserWindow, shell, dialog } = require('electron');
+const { autoUpdater } = require('electron-updater');
 
 const HOME = 'https://aurea-epet6.vercel.app/';
 const ORIGIN = new URL(HOME).origin;
@@ -44,7 +45,66 @@ function createWindow() {
     });
   });
   win.loadURL(HOME).catch(() => {});
+  if (app.isPackaged) setupNativeUpdates(win);
 }
+
+function setupNativeUpdates(win) {
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = false;
+  autoUpdater.allowPrerelease = false;
+  let updateReady = false;
+  let checking = false;
+  let updateVersion = '';
+  let prompting = false;
+  async function examInProgress() {
+    if (win.isDestroyed() || win.webContents.isLoading()) return true;
+    try {
+      return await win.webContents.executeJavaScript(
+        "(() => {try { const raw=sessionStorage.getItem('aurea_attempt'); if(!raw)return false; const a=JSON.parse(raw);return Boolean(a && a.status==='in_progress'); }catch(e){return true;}})()",
+        true
+      );
+    } catch (_) { return true; }
+  }
+  async function offerUpdate() {
+    if (!updateReady || prompting || win.isDestroyed() || await examInProgress()) return;
+    prompting = true;
+    try {
+      const { response } = await dialog.showMessageBox(win, {
+        type: 'info',
+        title: 'Áurea · Actualización disponible',
+        message: 'La versión ' + updateVersion + ' está lista para instalar.',
+        detail: 'Se cerrará y volverá a abrir Áurea. Las evaluaciones en curso nunca se interrumpen.',
+        buttons: ['Actualizar ahora', 'Más tarde'],
+        defaultId: 1, cancelId: 1
+      });
+      if (response === 0 && !(await examInProgress())) {
+        updateReady = false;
+        autoUpdater.quitAndInstall(false, true);
+      }
+    } finally { prompting = false; }
+  }
+  autoUpdater.on('update-downloaded', info => {
+    updateVersion = info.version || 'nueva';
+    updateReady = true;
+    offerUpdate().catch(() => {});
+  });
+  autoUpdater.on('error', error => {
+    // La aplicación sigue funcionando aunque GitHub esté momentáneamente inaccesible.
+    console.warn('Áurea: no se pudo consultar la actualización', error?.message || error);
+  });
+  function check() {
+    if (checking || win.isDestroyed()) return;
+    checking = true;
+    autoUpdater.checkForUpdates().catch(() => {}).finally(() => { checking = false; });
+  }
+  win.webContents.on('did-finish-load', () => offerUpdate().catch(() => {}));
+  setTimeout(check, 3500);
+  setInterval(() => {
+    if (updateReady) offerUpdate().catch(() => {});
+    else check();
+  }, 3600000);
+}
+
 app.setAppUserModelId('ar.edu.epet6.aurea');
 app.whenReady().then(() => {
   createWindow();
