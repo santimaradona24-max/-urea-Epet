@@ -335,7 +335,14 @@ function detailsTabOriginal(){
  return `<div class="split">${panel('Ficha académica',`<div class="list"><div class="list-row"><span>Materia</span><strong>${esc(e.subject?.name||'')}</strong></div><div class="list-row"><span>Duración</span><strong>${e.duration_minutes} minutos</strong></div><div class="list-row"><span>Aprobación</span><strong>${e.passing_percent}%</strong></div><div class="list-row"><span>Estado</span>${pill(e.status)}</div>${e.starts_at?`<div class="list-row"><span>Desde</span><strong>${new Date(e.starts_at).toLocaleString('es-AR')}</strong></div>`:''}${e.ends_at?`<div class="list-row"><span>Hasta</span><strong>${new Date(e.ends_at).toLocaleString('es-AR')}</strong></div>`:''}</div><div class="divider"></div><p style="white-space:pre-wrap">${esc(e.instructions||'Sin instrucciones adicionales.')}</p>`)}
  ${panel('Acciones',e.legacy_readonly?`<p>El historial antiguo permanece inalterable. Podés crear una nueva evaluación a partir de una versión.</p><div class="divider"></div><div class="field"><label>Versión original</label><select id="clone-bank"><option value="3">Versión 3</option><option value="2">Versión 2</option><option value="1">Versión 1</option></select></div>${button('Crear copia editable','clone-exam','primary')}`:e.status==='draft'?`<p style="margin-bottom:15px">Revisá las preguntas antes de publicar. Después de publicar quedarán bloqueadas para evitar cambios durante las entregas.</p>${button('Publicar evaluación','publish','primary')}`:e.status==='published'?`<p style="margin-bottom:15px">La evaluación acepta nuevos alumnos asignados. Cerrarla conserva sus resultados.</p>${button('Cerrar convocatoria','close','danger')}`:'<p>La evaluación está cerrada. Sus registros históricos siguen disponibles para consulta.</p>')}</div>`;
 }
-function detailsTab(){const e=state.exam.exam;return detailsTabOriginal()+(e.legacy_readonly?'':panel('Eliminar evaluación','<p>Solo se elimina si ningún alumno la comenzó. Las notas y entregas quedan protegidas.</p>'+state.user?.platform_owner?button('Eliminar evaluación','owner-delete-academic','danger',`data-id="${esc(e.id)}" data-kind="exam"`):button('Eliminar evaluación','delete-exam','danger')));}
+function detailsTab(){
+ const e=state.exam.exam;
+ if(e.legacy_readonly)return detailsTabOriginal();
+ const isOwner=state.user?.platform_owner===true;
+ const description=isOwner?'Como Owner podés eliminar esta evaluación y sus datos de prueba, incluso si tiene entregas. Esta acción es irreversible.':'Solo podés eliminarla si no tiene entregas.';
+ const deletion=isOwner?button('Eliminar evaluación','owner-delete-academic','danger',`data-id="${esc(e.id)}" data-kind="exam"`):button('Eliminar evaluación','delete-exam','danger');
+ return detailsTabOriginal()+panel('Eliminar evaluación',`<p>${description}</p>`+deletion);
+}
 function reportbook(){
  const r=state.report,people=state.students;
  return title('Libretas y calificaciones','Una carga por alumno, materia, ciclo lectivo y período académico.')+
