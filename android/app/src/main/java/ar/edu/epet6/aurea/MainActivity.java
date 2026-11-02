@@ -24,6 +24,8 @@ public class MainActivity extends Activity {
     private static final String HOST = "aurea-epet6.vercel.app";
     private static final int PICK_FILE = 901;
     private WebView webView;
+    private UpdateManager updateManager;
+    private SplashView splashView;
     private ValueCallback<Uri[]> chosenFiles;
     private View fullscreenView;
     private WebChromeClient.CustomViewCallback fullscreenCallback;
@@ -64,6 +66,17 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 26) settings.setSafeBrowsingEnabled(true);
         CookieManager.getInstance().setAcceptCookie(true);
         webView.setWebViewClient(new WebViewClient() {
+            @Override public void onPageFinished(WebView view, String url) {
+                if (internal(Uri.parse(url))) {
+                    view.evaluateJavascript("localStorage.getItem('aurea_theme_last')", result -> {
+                        String theme = result == null ? "" : result.replace("\\\"", "").trim();
+                        if (theme.matches("copper|amber|jade|indigo")) {
+                            getSharedPreferences("aurea_native", MODE_PRIVATE).edit()
+                                .putString("theme", theme).apply();
+                        }
+                    });
+                }
+            }
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 if (!request.isForMainFrame()) return false;
@@ -109,9 +122,20 @@ public class MainActivity extends Activity {
                 fullscreenCallback = null;
             }
         });
-        setContentView(webView);
-        if (state == null || webView.restoreState(state) == null) {
-            webView.loadUrl(HOME);
+        final boolean restored = state != null && webView.restoreState(state) != null;
+        if (restored) {
+            setContentView(webView);
+        } else {
+            splashView = new SplashView(this);
+            setContentView(splashView);
+            updateManager = new UpdateManager(this, splashView, () -> {
+                if (!isFinishing() && !isDestroyed()) {
+                    splashView = null;
+                    setContentView(webView);
+                    webView.loadUrl(HOME);
+                }
+            });
+            updateManager.checkAtStartup();
         }
     }
     @Override
