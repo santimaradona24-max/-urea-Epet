@@ -20,7 +20,7 @@ const paths={
  arrow:'M4 12h16 M14 6l6 6-6 6'
 };
 const icon=(id,size=18)=>`<svg width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[id]||paths.paper}"/></svg>`;
-const state={route:'home',id:'',tab:'questions',token:sessionStorage.getItem('aurea_auth')||localStorage.getItem('aurea_auth')||'',user:null,online:null,catalog:{subjects:[],exams:[]},subjects:[],exams:[],subjectExams:[],exam:null,results:[],students:[],staff:[],unlinked:[],report:[],profile:null,preview:[],attempt:null,filter:'',busy:false,submitting:false,expiryQueued:false,examResetting:false,examFullscreenRequired:false,live:null,review:null,gradingMode:'automatic',questionType:'choice',lastLiveFetch:0,studentMonitor:null,studentMonitorAttempt:null,myProfile:null,directory:[],knownUser:localStorage.getItem('aurea_known_user')||'',ownerData:null,routeFetched:{},routeVersion:0,loadingRoute:false,community:{tab:'posts',posts:[],people:[],comments:{},page:0,more:false,query:'',loaded:false},communityImage:null};
+const state={route:'home',id:'',tab:'questions',token:sessionStorage.getItem('aurea_auth')||localStorage.getItem('aurea_auth')||'',user:null,online:null,catalog:{subjects:[],exams:[]},exampleQuestions:[],subjects:[],exams:[],subjectExams:[],exam:null,results:[],students:[],staff:[],unlinked:[],report:[],profile:null,preview:[],attempt:null,filter:'',busy:false,submitting:false,expiryQueued:false,examResetting:false,examFullscreenRequired:false,live:null,review:null,gradingMode:'automatic',questionType:'choice',lastLiveFetch:0,studentMonitor:null,studentMonitorAttempt:null,myProfile:null,directory:[],knownUser:localStorage.getItem('aurea_known_user')||'',ownerData:null,routeFetched:{},routeVersion:0,loadingRoute:false,community:{tab:'posts',posts:[],people:[],comments:{},page:0,more:false,query:'',loaded:false},communityImage:null};
 try{state.attempt=JSON.parse(sessionStorage.getItem('aurea_attempt')||'null')}catch{}
 async function call(fn,action,data={}){
  let res;try{res=await fetch(BASE+fn,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...data,action,...(state.token?{staff_token:state.token}:{})}),cache:'no-store'});}catch{throw Error('No se pudo conectar al servidor. Verificá tu conexión.')}
@@ -142,7 +142,7 @@ function studentHome(){
  const pending=ex.filter(x=>x.status==='no_iniciada'&&x.exam_status==='published'||x.status==='in_progress');
  const finished=ex.filter(x=>!pending.includes(x));
  const welcome=title('Hola, '+esc(first)+'.','Este es tu espacio. Acá ves qué tenés pendiente y dónde encontrar tus notas.');
- const verify=p.identity_verified?'':'<div class="banner">'+icon('shield')+'<div><strong>Cuenta pendiente de verificación</strong><p>El personal de la escuela debe verificar tu identidad para habilitar evaluaciones.</p></div></div>';
+ const verify=p.identity_verified?'':'<div class="banner">'+icon('shield')+'<div><strong>Cuenta pendiente de habilitación</strong><p>La cuenta todavía no está habilitada. Volvé a iniciar sesión.</p></div></div>';
  const pendingList=pending.length?studentExamRows(pending.slice(0,4)):empty('Estás al día','No hay evaluaciones pendientes por ahora.');
  return welcome+verify+
  '<div class="aurea-student-quick">'+
@@ -180,26 +180,31 @@ function catalog(){
 }
 function publicExam(){
  const x=state.catalog.exams.find(v=>v.id===state.id);if(!x)return catalog();
+ const example=x.id==='a89f1840-b2f8-422c-8c69-ed8768550fa2';
+ const intro=example?'Esta es una demostración pública del formato real de Áurea. No se registran respuestas y no se muestran calificaciones personales.':'Esta evaluación se asigna a las cuentas de alumnos desde el campus.';
+ const q=(state.exampleQuestions||[]);
+ const preview=example?section('Vista de ejemplo','Preguntas originales de Derecho Laboral sin respuestas correctas ni datos de alumnos.')+
+  panel('Preguntas de muestra',q.length?q.map((item,i)=>'<div class="question"><div class="eyebrow">PREGUNTA '+(i+1)+'</div><div class="question-title">'+esc(item.prompt)+'</div>'+
+    (Array.isArray(item.options)&&item.options.length?item.options.map(opt=>'<div class="option">'+esc(opt)+'</div>').join(''):'<p>Respuesta de desarrollo.</p>')+'</div>').join(''):empty('No disponible','No se pudo cargar la vista de preguntas.')):'';
  return title(esc(x.title),esc(subname(x.subject_id)),back('catalog'))+
- `<div class="split">${panel('Evaluación',`${pill(x.status)} <span class="pill muted">${x.legacy_readonly?'Archivo histórico':'Convocatoria'}</span><div class="divider"></div><h3>${x.legacy_readonly?'Historial integrado':'Ingreso desde cuenta'}</h3><p style="margin-top:10px">${x.legacy_readonly?'Las tres versiones y sus resultados permanecen en el sistema. Los alumnos verificados pueden consultar sus propios registros históricos una vez vinculados.':'Esta evaluación se asigna a cuentas verificadas. No se accede escribiendo nombres ni códigos compartidos.'}</p><div class="actions" style="margin-top:18px">${button('Ir a mi perfil',state.user?'goto:home':'goto:login','primary')}</div>`)}
- ${panel('Proceso',steps(['Registrate o iniciá sesión.','Administración valida tu identidad escolar.','El profesor te asigna la evaluación.','La rendís y consultás su calificación en tu perfil.']))}</div>`;
+  panel(example?'Evaluación de ejemplo':'Información de la evaluación','<div class="stack">'+pill(x.status)+(example?'<span class="pill muted">Demostración pública</span>':'')+'</div><p style="margin-top:12px">'+intro+'</p>')+preview;
 }
 function login(){
  return title('Acceso al campus','El mismo inicio de sesión sirve para alumnos, docentes, preceptores y administración.')+
  `<div class="account-wrap">${panel('Ingresar con mi cuenta',`<form data-form="login"><div class="field"><label>Usuario</label><input name="username" autocomplete="username" value="${esc(state.knownUser||'')}" required></div><div class="field"><label>Contraseña</label><input name="password" type="password" autocomplete="current-password" required></div><button class="btn primary" type="submit">Ingresar al campus</button></form><div class="divider"></div>${button('Crear cuenta de alumno','goto:register')}`)}
- ${panel('Identidades protegidas',`${steps(['Cada usuario tiene su propia cuenta.','Administración verifica la identidad escolar.','Cada alumno consulta únicamente sus notas.'])}<div class="notice">Los accesos de docentes y preceptores los habilita administración.</div>`)}</div>`;
+ ${panel('Identidades protegidas',`${steps(['Cada usuario tiene su propia cuenta.','Los alumnos acceden inmediatamente tras registrarse.','Cada alumno consulta únicamente sus notas.'])}<div class="notice">Los accesos de docentes y preceptores los habilita administración.</div>`)}</div>`;
 }
 function register(){
  return title('Crear cuenta de alumno','Un usuario para todas las evaluaciones y libretas, sin volver a escribir tu nombre.')+
  `<div class="account-wrap">${panel('Datos personales',`<form data-form="register"><div class="field"><label>Nombre y apellido reales</label><input name="display_name" minlength="5" maxlength="120" autocomplete="name" required></div><div class="field"><label>Curso y división</label><input name="course" maxlength="80" required></div><div class="field"><label>Nombre de usuario</label><input name="username" minlength="4" maxlength="40" autocomplete="username" required></div><div class="field"><label>Contraseña (12 caracteres como mínimo)</label><input name="password" minlength="12" type="password" autocomplete="new-password" required></div><button class="btn primary" type="submit">Registrar mi cuenta</button></form>`)}
- ${panel('Qué sucede después',`${steps(['Creás la cuenta.','Administración verifica que sos el alumno declarado.','Tus docentes te asignan evaluaciones.','Las notas quedan asociadas a tu perfil.'])}<div class="notice">Registrar un nombre ajeno no permite ver las calificaciones de esa persona.</div>`)}</div>`;
+ ${panel('Qué sucede después',`${steps(['Creás la cuenta.','Podés comenzar a usar el campus sin esperar una validación.','Tus docentes te asignan evaluaciones.','Las notas quedan asociadas a tu perfil.'])}<div class="notice">Registrar un nombre ajeno no permite ver las calificaciones de esa persona.</div>`)}</div>`;
 }
 function studentExams(){
  const arr=state.profile?.exams||[];
  const pending=arr.filter(x=>x.status==='no_iniciada'||x.status==='in_progress');
  const done=arr.filter(x=>!pending.includes(x));
  return title('Mis evaluaciones','Las pendientes arriba. Las entregadas quedan en tu historial.',button('Actualizar','reload-profile'))+
- (!state.profile?.profile?.identity_verified?'<div class="notice">La cuenta todavía no está verificada por la institución.</div>':'')+
+ (!state.profile?.profile?.identity_verified?'<div class="notice">La cuenta todavía no está habilitada.</div>':'')+
  section('Por rendir',pending.length+' evaluaciones', '')+
  panel('Pendientes',pending.length?studentExamRows(pending):empty('No tenés evaluaciones pendientes','Cuando un docente te asigne una, aparecerá aquí.'))+
  (done.length?section('Ya rendidas','Tus entregas, correcciones y calificaciones.')+panel('Historial',studentExamRows(done)):'');
@@ -520,7 +525,7 @@ async function refresh(){
  const allowed=nav().map(x=>x[0]).concat(['public-exam','subject','exam','take','exam-ready']);
  if(state.attempt?.status==='in_progress'&&target!=='take'){location.hash='#/take';return;}
  let current=allowed.includes(target)?target:'home';
- if(!state.user&&!['home','login','register','help'].includes(current)||state.user&&['login','register'].includes(current)){current='home';history.replaceState(null,'',location.pathname+location.search+'#/home');}
+ if(!state.user&&!['home','login','register','help','catalog','public-exam'].includes(current)||state.user&&['login','register'].includes(current)){current='home';history.replaceState(null,'',location.pathname+location.search+'#/home');}
  const teacherRoutes=['subjects','subject','exams','exam'],studentRoutes=['student-exams','grades','take','exam-ready'];
  if((teacherRoutes.includes(current)&&!['teacher','admin'].includes(role))||(studentRoutes.includes(current)&&role!=='student'&&!(current==='grades'&&state.user?.platform_owner))||(current==='reportbook'&&!['admin','preceptor'].includes(role))||(current==='students'&&!['admin','preceptor'].includes(role))||(current==='staff'&&role!=='admin')||(['account','directory','community'].includes(current)&&!state.user)||(['owner','owner-history'].includes(current)&&!state.user?.platform_owner)){location.hash='#/home';return;}
  const version=++state.routeVersion;
@@ -535,6 +540,7 @@ async function refresh(){
  const tasks=[];
  try{
   if(['catalog','public-exam'].includes(current))tasks.push(api('catalog').then(x=>{state.catalog=x}));
+  if(current==='public-exam'&&id==='a89f1840-b2f8-422c-8c69-ed8768550fa2')tasks.push(api('example_exam').then(x=>{state.exampleQuestions=x.questions||[]}).catch(()=>{state.exampleQuestions=[]}));
   if((current==='home'&&role==='student'||studentRoutes.includes(current)&&current!=='take')&&!(current==='exam-ready'&&state.profile))tasks.push(loadProfile());
   if((current==='home'&&['admin','teacher'].includes(role))||current==='exams')tasks.push(loadAll());
   if(current==='home'&&role==='preceptor'||current==='reportbook')tasks.push(Promise.all([users('report_history'),users('students')]).then(([a,b])=>{state.report=a.grades;state.students=b.students}));
