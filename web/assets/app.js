@@ -78,9 +78,9 @@ const aureaPrompt=(message,options={})=>aureaModal(message,{...options,entry:tru
 const access=()=>state.user?.role||'public';
 const titleRole=(r)=>({public:'Visitante',student:'Alumno',teacher:'Docente',preceptor:'Preceptoría',admin:'Administración'})[r]||'Usuario';
 const nav=()=>{
- const common=[['home','Resumen','home']];
+ const common=[['home','Resumen','home'],['catalog','Ejemplo y catálogo','paper']];
  if(!state.user)return [...common,['register','Crear cuenta','people'],['login','Iniciar sesión','lock'],['catalog','Evaluaciones','paper'],['help','Ayuda','help']];
- if(access()==='student')return [['home','Inicio','home'],['student-exams','Mis pruebas','paper'],['grades','Mis notas','chart'],['community','Comunidad','people'],['account','Mi perfil','gear'],['help','Ayuda','help']];
+ if(access()==='student')return [['home','Inicio','home'],['catalog','Ver ejemplo','book'],['student-exams','Mis pruebas','paper'],['grades','Mis notas','chart'],['community','Comunidad','people'],['account','Mi perfil','gear'],['help','Ayuda','help']];
  if(access()==='teacher')return [...common,['subjects','Materias','book'],['exams','Evaluaciones','paper'],['account','Mi perfil','gear'],['community','Comunidad','people'],['help','Ayuda','help']];
  if(access()==='preceptor')return [...common,['reportbook','Libretas','book'],['students','Alumnos','people'],['account','Mi perfil','gear'],['community','Comunidad','people'],['help','Ayuda','help']];
  return [...common,['subjects','Materias','book'],['exams','Evaluaciones','paper'],['reportbook','Libretas','chart'],['students','Alumnos','people'],['staff','Personal','shield'],...(state.user?.platform_owner?[['owner','Centro Owner','shield'],['owner-history','Mi historial','chart']]:[]),['account','Mi perfil','gear'],['community','Comunidad','people'],['help','Ayuda','help']];
@@ -106,7 +106,7 @@ const formatLink=(r)=>({home:'Inicio',catalog:'Catálogo',login:'Acceso',registe
 function shell(inner){
  if(state.route==='take'&&state.attempt)return '<div class="aurea-exam-shell"><header class="aurea-exam-header"><span class="gem"></span><div><strong>Áurea · Evaluación en curso</strong><small>Modo concentración · Tu tiempo continúa aunque cambies de aplicación</small></div><span class="aurea-exam-badge">Sesión activa</span></header><main class="aurea-exam-content">'+inner+'</main><footer class="aurea-exam-footer">Las respuestas se sincronizan con el servidor. No cierres el navegador antes de entregar.</footer></div>';
  const items=nav(),name=state.user?.display_name||'EPET N.º 6';
- return `<div class="app-shell"><aside class="sidebar"><div class="logo"><span class="gem"></span><div><div class="wordmark">Áurea</div><div class="logo-sub">Campus académico · EPET 6</div></div></div><div class="nav-label">Navegación</div><nav>${items.map(([r,t,i])=>`<button class="nav-link ${state.route===r?'active':''}" data-go="${r}">${icon(i)}${t}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="identity"><div class="avatar">${esc(name.charAt(0).toUpperCase())}</div><div><strong>${esc(name)}</strong><small>${titleRole(access())}</small></div></div>${state.user?`<button class="nav-link" data-action="logout" style="margin-top:9px">${icon('logout')}Cerrar sesión</button>`:''}<p style="font-size:10px;margin:14px 7px;color:#b0a18f">EPET N.º 6 · San Juan</p></div></aside><div class="main-wrap"><div class="topbar"><span class="crumb">EPET N.º 6 &nbsp;/&nbsp; <strong>${formatLink(state.route)}</strong></span><div class="top-actions"><span class="server ${state.online===false?'offline':state.online===null?'checking':''}" title="Estado de conexión al servidor académico">${state.online===true?'Conectado':state.online===false?'Sin conexión':'Verificando...'}</span>${state.user?`<span class="avatar" style="height:33px;width:33px">${esc(name.charAt(0).toUpperCase())}</span>`:''}</div></div><main class="content">${inner}<div class="footer-note">EPET N.º 6 · Plataforma de evaluaciones y seguimiento académico. Datos privados protegidos mediante cuentas personales.</div></main></div></div><nav class="mobilebar" aria-label="Navegación principal">${items.filter(([r])=>['home','student-exams','exams','grades','community','account'].includes(r)).slice(0,4).map(([r,t,i])=>`<button class="mobile-link ${state.route===r?'active':''}" data-go="${r}">${icon(i)}<span>${t}</span></button>`).join('')}<button class="mobile-link" type="button" data-action="mobile-more" aria-label="Más secciones" aria-expanded="false">${icon('gear')}<span>Más</span></button></nav><div class="mobile-more-sheet" id="mobile-more-sheet" aria-hidden="true"><div class="mobile-more-header"><strong>Explorar Áurea</strong><button class="btn ghost small" type="button" data-action="mobile-more">Cerrar</button></div>${items.map(([r,t,i])=>`<button class="mobile-more-link ${state.route===r?'active':''}" type="button" data-go="${r}">${icon(i)}<span>${t}</span></button>`).join('')}</div>`;
+ return `<div class="app-shell"><aside class="sidebar"><div class="logo"><span class="gem"></span><div><div class="wordmark">Áurea</div><div class="logo-sub">Campus académico · EPET 6</div></div></div><div class="nav-label">Navegación</div><nav>${items.map(([r,t,i])=>`<button class="nav-link ${state.route===r?'active':''}" data-go="${r}">${icon(i)}${t}</button>`).join('')}</nav><div class="sidebar-bottom"><div class="identity"><div class="avatar">${esc(name.charAt(0).toUpperCase())}</div><div><strong>${esc(name)}</strong><small>${titleRole(access())}</small></div></div>${state.user?`<button class="nav-link" data-action="logout" style="margin-top:9px">${icon('logout')}Cerrar sesión</button>`:''}<p style="font-size:10px;margin:14px 7px;color:#b0a18f">EPET N.º 6 · San Juan</p></div></aside><div class="main-wrap"><div class="topbar"><span class="crumb">EPET N.º 6 &nbsp;/&nbsp; <strong>${formatLink(state.route)}</strong></span><div class="top-actions">${button('Derecho Laboral · ejemplo','open-law-example','ghost small')}<span class="server ${state.online===false?'offline':state.online===null?'checking':''}" title="Estado de conexión al servidor académico">${state.online===true?'Conectado':state.online===false?'Sin conexión':'Verificando...'}</span>${state.user?`<span class="avatar" style="height:33px;width:33px">${esc(name.charAt(0).toUpperCase())}</span>`:''}</div></div><main class="content">${inner}<div class="footer-note">EPET N.º 6 · Plataforma de evaluaciones y seguimiento académico. Datos privados protegidos mediante cuentas personales.</div></main></div></div><nav class="mobilebar" aria-label="Navegación principal">${items.filter(([r])=>['home','student-exams','exams','grades','community','account'].includes(r)).slice(0,4).map(([r,t,i])=>`<button class="mobile-link ${state.route===r?'active':''}" data-go="${r}">${icon(i)}<span>${t}</span></button>`).join('')}<button class="mobile-link" type="button" data-action="mobile-more" aria-label="Más secciones" aria-expanded="false">${icon('gear')}<span>Más</span></button></nav><div class="mobile-more-sheet" id="mobile-more-sheet" aria-hidden="true"><div class="mobile-more-header"><strong>Explorar Áurea</strong><button class="btn ghost small" type="button" data-action="mobile-more">Cerrar</button></div>${items.map(([r,t,i])=>`<button class="mobile-more-link ${state.route===r?'active':''}" type="button" data-go="${r}">${icon(i)}<span>${t}</span></button>`).join('')}</div>`;
 }
 function examRows(items,mode='public'){
  if(!items.length)return empty('No hay evaluaciones','Cuando haya convocatorias, aparecerán en esta lista.');
@@ -119,7 +119,7 @@ function welcomeHome(){
  const known=state.knownUser;
  return `<div class="onboard-grid">
  <section class="onboard-intro"><div class="eyebrow">EPET N.º 6 · SAN JUAN</div><div class="onboard-logo"><span class="gem"></span><span>Áurea</span></div><h1>Tu escuela, <em>en un solo lugar.</em></h1><p>Tu perfil, las evaluaciones y las notas, reunidos en un espacio personal. Ingresá para continuar con tu trayectoria académica.</p><div class="onboard-tags"><span>${icon('shield',16)} Cuenta segura</span><span>${icon('paper',16)} Evaluaciones</span><span>${icon('cap',16)} Tu educación</span></div><div class="onboard-orb" aria-hidden="true"></div></section>
- <section class="onboard-choice"><div class="eyebrow">BIENVENIDO A ÁUREA</div><h2>${known?'Qué bueno verte de nuevo':'Empezá tu experiencia'}</h2><p>${known?'Ya hay un usuario recordado en este dispositivo. Iniciá sesión para entrar al campus.':'Creá tu cuenta personal para poder acceder a tus evaluaciones y al resto de tu información escolar.'}</p><div class="onboard-actions">${known?`${button('Iniciar sesión','goto:login','primary')}${button('Crear otra cuenta','goto:register')}`:`${button('Crear mi cuenta','goto:register','primary')}${button('Ya tengo una cuenta','goto:login')}${button('Ver Derecho Laboral de ejemplo','open-law-example','ghost')}`}</div><div class="onboard-separator"><span>ACCESO ESCOLAR</span></div><div class="onboard-info">${icon('shield',17)}<span>Los profesores, preceptores y administración ingresan con las cuentas asignadas por la institución.</span></div></section>
+ <section class="onboard-choice"><div class="eyebrow">BIENVENIDO A ÁUREA</div><h2>${known?'Qué bueno verte de nuevo':'Empezá tu experiencia'}</h2><p>${known?'Ya hay un usuario recordado en este dispositivo. Iniciá sesión para entrar al campus.':'Creá tu cuenta personal para poder acceder a tus evaluaciones y al resto de tu información escolar.'}</p><div class="onboard-actions">${known?`${button('Iniciar sesión','goto:login','primary')}${button('Crear otra cuenta','goto:register')}`:`${button('Crear mi cuenta','goto:register','primary')}${button('Ya tengo una cuenta','goto:login')}`}${button('Ver Derecho Laboral de ejemplo','open-law-example','ghost')}</div><div class="onboard-separator"><span>ACCESO ESCOLAR</span></div><div class="onboard-info">${icon('shield',17)}<span>Los profesores, preceptores y administración ingresan con las cuentas asignadas por la institución.</span></div></section>
  </div>`;
 }
 function authShell(inner){
@@ -142,9 +142,9 @@ function studentHome(){
  const pending=ex.filter(x=>x.status==='no_iniciada'&&x.exam_status==='published'||x.status==='in_progress');
  const finished=ex.filter(x=>!pending.includes(x));
  const welcome=title('Hola, '+esc(first)+'.','Este es tu espacio. Acá ves qué tenés pendiente y dónde encontrar tus notas.');
- const verify=p.identity_verified?'':'<div class="banner">'+icon('shield')+'<div><strong>Cuenta pendiente de habilitación</strong><p>La cuenta todavía no está habilitada. Volvé a iniciar sesión.</p></div></div>';
+
  const pendingList=pending.length?studentExamRows(pending.slice(0,4)):empty('Estás al día','No hay evaluaciones pendientes por ahora.');
- return welcome+verify+
+ return welcome+
  '<div class="aurea-student-quick">'+
  '<button type="button" data-go="student-exams">'+icon('paper')+'<strong>Mis evaluaciones</strong><span>'+pending.length+' pendientes</span></button>'+
  '<button type="button" data-go="grades">'+icon('chart')+'<strong>Mis notas</strong><span>'+grades.length+' registros</span></button>'+
@@ -169,13 +169,14 @@ function preceptorHome(){
  const gr=state.report||[];
  return title('Espacio de preceptoría','Las libretas y las cuentas de alumnos se gestionan dentro del mismo sistema.')+
  kpis([['Notas registradas',gr.length,'Registros recientes disponibles'],['Alumnos',state.students.length,'Cuentas de alumnos'],['Promedio registrado',avg(gr),'Media simple de registros']])+
- section('Herramientas de preceptoría','Las calificaciones se vinculan con alumnos verificados.')+
+ section('Herramientas de preceptoría','Las calificaciones se vinculan con cuentas de alumnos.')+
  `<div class="grid cols2">${feature('Libretas académicas','Importá notas y consultá su historial.','goto:reportbook','Ver libretas','book')}${feature('Cuentas de alumnos','Consultá identidades y cursos registrados.','goto:students','Ver alumnos','people')}</div>`+
  section('Calificaciones recientes')+panel('Registros',gr.length?gradeTable(gr.slice(0,7),true):empty('Sin notas importadas','Las notas aparecerán cuando se carguen las libretas.'));
 }
 function catalog(){
  const ex=state.catalog.exams.filter(x=>(x.title+' '+subname(x.subject_id)).toLowerCase().includes(state.filter.toLowerCase()));
- return title('Catálogo de evaluaciones','Todas las materias en un solo catálogo, con convocatorias y archivos históricos.')+
+ return title('Catálogo de evaluaciones','Convocatorias y una demostración real de Derecho Laboral.')+
+ panel('Ejemplo público · Derecho Laboral',`<p>Explorá preguntas de una evaluación real sin iniciar sesión, responder ni consultar notas personales.</p><div class="actions" style="margin-top:14px">${button('Ver evaluación de ejemplo','open-law-example','primary')}</div>`)+
  panel('',`<div class="field"><label>Buscar por materia o evaluación</label><input id="catalog-filter" value="${esc(state.filter)}"></div><div id="catalog-results">${examRows(ex)}</div>`);
 }
 function publicExam(){
@@ -204,7 +205,6 @@ function studentExams(){
  const pending=arr.filter(x=>x.status==='no_iniciada'||x.status==='in_progress');
  const done=arr.filter(x=>!pending.includes(x));
  return title('Mis evaluaciones','Las pendientes arriba. Las entregadas quedan en tu historial.',button('Actualizar','reload-profile'))+
- (!state.profile?.profile?.identity_verified?'<div class="notice">La cuenta todavía no está habilitada.</div>':'')+
  section('Por rendir',pending.length+' evaluaciones', '')+
  panel('Pendientes',pending.length?studentExamRows(pending):empty('No tenés evaluaciones pendientes','Cuando un docente te asigne una, aparecerá aquí.'))+
  (done.length?section('Ya rendidas','Tus entregas, correcciones y calificaciones.')+panel('Historial',studentExamRows(done)):'');
@@ -317,14 +317,14 @@ function preview(){
  '<label>Rúbrica · solo desarrollo</label><textarea data-field="rubric" rows="2">'+esc(q.rubric||'')+'</textarea></div>').join('')+'</section>';
 }
 function studentsTab(){
- const e=state.exam.exam,r=state.results||[],verified=(state.students||[]).filter(x=>x.identity_verified);
+ const e=state.exam.exam,r=state.results||[],verified=(state.students||[]);
  const assigned=new Set(r.map(x=>x.student_account_id).filter(Boolean));
  const choices=verified.filter(x=>!assigned.has(x.id));
  const rows=r.length?r.map(x=>'<div class="aurea-student"><div><strong>'+esc(x.student_name)+'</strong><small>'+(x.status==='not_started'?'No inició':esc(x.status))+(x.score_percent==null?'':' · '+grade(x.score_percent)+'/10')+'</small></div><div class="actions">'+
  (x.can_unassign?button('Retirar','unassign-student','secondary small','data-id="'+esc(x.invite_id)+'"'):'')+
  (state.user?.platform_owner&&!e.legacy_readonly&&x.invite_id?button('Reiniciar','owner-reset-student','secondary small','data-id="'+esc(x.invite_id)+'"')+button('Eliminar','owner-remove-student','danger small','data-id="'+esc(x.invite_id)+'"'):'')+
- '</div></div>').join(''):empty('Todavía no hay asignaciones','Elegí un alumno verificado para empezar.');
- const form=e.status==='published'&&!e.legacy_readonly?'<form data-form="assign"><div class="field"><label>Elegí un alumno verificado</label><select name="username" required><option value="">Seleccionar alumno</option>'+choices.map(x=>'<option value="'+esc(x.username)+'">'+esc(x.display_name)+' · @'+esc(x.username)+' · '+esc(x.course||'Sin curso')+'</option>').join('')+'</select></div><button class="btn primary" type="submit">Asignar alumno</button></form>':
+ '</div></div>').join(''):empty('Todavía no hay asignaciones','Elegí un alumno registrado para empezar.');
+ const form=e.status==='published'&&!e.legacy_readonly?'<form data-form="assign"><div class="field"><label>Elegí un alumno registrado</label><select name="username" required><option value="">Seleccionar alumno</option>'+choices.map(x=>'<option value="'+esc(x.username)+'">'+esc(x.display_name)+' · @'+esc(x.username)+' · '+esc(x.course||'Sin curso')+'</option>').join('')+'</select></div><button class="btn primary" type="submit">Asignar alumno</button></form>':
  '<p>Primero publicá la evaluación. Después podés seleccionar alumnos.</p>'+button('Abrir configuración','goto-exam-settings','secondary');
  return '<div class="aurea-assign-layout">'+panel('Alumnos de esta evaluación',rows)+panel('Asignar evaluación',form)+'</div>';
 }
@@ -357,8 +357,8 @@ function reportbook(){
 }
 function students(){
  const a=state.students;
- return title('Directorio de alumnos','Usuarios, cursos y estado de verificación de identidad.',button('Actualizar','reload-students'))+
- panel('Alumnos registrados',a.length?`<div class="list">${a.map(s=>`<div class="list-row"><div><strong>${esc(s.display_name)}</strong><span class="sub">@${esc(s.username)} · ${esc(s.course||'Sin curso')}</span></div><div class="actions"><span class="pill ${s.identity_verified?'success':'warn'}">${s.identity_verified?'Verificado':'Sin verificar'}</span>${access()==='admin'?button(s.identity_verified?'Revocar':'Verificar',s.identity_verified?'unverify':'verify',s.identity_verified?'secondary small':'primary small',`data-id="${esc(s.id)}"`):''}</div></div>`).join('')}</div>`:empty('No hay cuentas de alumnos','Cuando se registren alumnos aparecerán acá.'))+
+ return title('Directorio de alumnos','Usuarios y cursos. El acceso estudiantil es inmediato.',button('Actualizar','reload-students'))+
+ panel('Alumnos registrados',a.length?`<div class="list">${a.map(s=>`<div class="list-row"><div><strong>${esc(s.display_name)}</strong><span class="sub">@${esc(s.username)} · ${esc(s.course||'Sin curso')}</span></div><div class="actions"><span class="pill success">Acceso habilitado</span></div></div>`).join('')}</div>`:empty('No hay cuentas de alumnos','Cuando se registren alumnos aparecerán acá.'))+
  (access()!=='admin'?'':section('Notas anteriores','Vinculá los resultados históricos únicamente tras comprobar la identidad.')+
  panel('Vinculación de Derecho Laboral',`<form data-form="link"><div class="form-grid"><div class="field"><label>Registro histórico</label><select name="attempt_id" required><option value="">Elegir registro</option>${state.unlinked.map(x=>`<option value="${esc(x.attempt_id)}">${esc(x.student_name)} · ${grade(x.score_percent)}/10</option>`).join('')}</select></div><div class="field"><label>Cuenta verificada</label><select name="student_id" required><option value="">Elegir alumno</option>${a.filter(x=>x.identity_verified).map(x=>`<option value="${esc(x.id)}">${esc(x.display_name)} (@${esc(x.username)})</option>`).join('')}</select></div></div><button class="btn primary" type="submit">Vincular registro</button></form><p class="hint" style="margin-top:10px">No se asocian calificaciones basándose únicamente en un nombre.</p>`));
 }
@@ -370,6 +370,7 @@ function staff(){
 }
 function avatar(p,n=75){const name=p?.nickname||p?.display_name||'?';return `<span class="profile-avatar" style="width:${n}px;height:${n}px">${p?.avatar_url?`<img src="${esc(p.avatar_url)}" alt="Foto de ${esc(name)}">`:esc(name.charAt(0).toUpperCase())}</span>`;}
 function roleSeal(p){
+ if(p.role==='student'&&!p.platform_owner)return `<span class="role-seal rank-badge rank-badge--student" title="Alumno">${icon('people',15)} <strong>Alumno</strong></span>`;
  const role=p.platform_owner?'Owner':p.role==='admin'?'Administrador':p.role==='teacher'?'Docente':p.role==='preceptor'?'Preceptor':'Alumno';
  const verified=!!(p.verified||p.identity_verified);
  const kind=p.platform_owner?'owner':["admin","teacher","preceptor","student"].includes(p.role)?p.role:"student";
@@ -409,7 +410,7 @@ function ownerManagement(){
   ${button('Asignar rango','owner-rank','secondary small',`data-id="${esc(p.id)}"`)}
   </div>
   <div class="owner-verify-row">
-   ${p.identity_verified?(p.role==='student'?button('Quitar verificación','owner-unverify','ghost small',`data-id="${esc(p.id)}"`):'<span class="owner-immutable">Insignia certificada por el cargo</span>'):button('Verificar identidad','owner-verify','primary small',`data-id="${esc(p.id)}"`)}
+   ${p.role==='student'?'<span class="owner-immutable">Acceso inmediato · sin verificación manual</span>':p.identity_verified?'<span class="owner-immutable">Insignia certificada por el cargo</span>':button('Verificar identidad','owner-verify','primary small',`data-id="${esc(p.id)}"`)}
    ${button(p.active?'Suspender':'Reactivar',p.active?'owner-disable':'owner-enable','secondary small',`data-id="${esc(p.id)}"`)}
    ${button('Cerrar sesiones','owner-sessions','ghost small',`data-id="${esc(p.id)}"`)}
   </div></div>`;
@@ -766,7 +767,7 @@ async function action(a,el){
  if(a==='delete-question'){if(!await aureaConfirm('¿Eliminar esta pregunta del borrador?'))return;await api('delete_question',{exam_id:state.id,question_id:id});await loadExam(state.id);draw();return;}
  if(a==='publish'||a==='close'){if(!await aureaConfirm(a==='publish'?'¿Publicar la evaluación y bloquear la edición?':'¿Cerrar la convocatoria manteniendo las notas?'))return;await api(a==='publish'?'publish_exam':'close_exam',{exam_id:state.id});await loadExam(state.id);state.tab='details';draw();return;}
  if(a==='clone-exam'){const version=Number($('#clone-bank').value);const r=await api('clone_exam',{exam_id:state.id,version,title:'Derecho Laboral · Nueva convocatoria'});toast('Copia editable creada');go('exam',r.exam_id);return;}
- if(a==='verify'||a==='unverify'){if(!await aureaConfirm(a==='verify'?'¿Verificaste la identidad escolar de este alumno?':'¿Revocar la verificación?'))return;await users('verify_student',{student_id:id,verified:a==='verify'});state.students=(await users('students')).students;draw();return;}
+ if(a==='verify'||a==='unverify'){toast('El acceso de alumnos ya no necesita verificación manual.');return;}
  if(a==='export-results'){download('evaluacion-resultados.csv',[['Alumno','Estado','Nota / 10','Versión','Incidentes','Fecha'],...state.results.map(x=>[x.student_name,x.status,grade(x.score_percent),x.bank_version||'',x.incident_count||0,x.finished_at||''])]);return;}
  if(a==='export-grades'){download('libretas-epet6.csv',[['Alumno','Usuario','Materia','Año','Período','Nota'],...state.report.map(x=>[x.student_name,x.username,x.subject_name,x.school_year,x.term,x.score])]);return;}
  if(a==='prev'){const at=state.attempt;if(!at)return;clearTimeout(answerDebounce);const q=captureExamDraft();if(q)persistExamQuestion(q,at).catch(()=>{});if(at.index>0){at.index--;saveAttempt();draw();}return;}
