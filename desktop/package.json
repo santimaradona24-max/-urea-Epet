@@ -8,7 +8,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
-    "dist:win": "electron-builder --win nsis --x64 --publish never"
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
+    "release:win": "electron-builder --win nsis --x64 --publish always"
   },
   "devDependencies": {
     "electron": "45.2.1",
@@ -22,6 +23,7 @@
     },
     "files": [
       "main.js",
+      "preload.js",
       "package.json"
     ],
     "win": {
@@ -42,7 +44,8 @@
       {
         "provider": "github",
         "owner": "santimaradona24-max",
-        "repo": "-urea-Epet"
+        "repo": "-urea-Epet",
+        "releaseType": "release"
       }
     ]
   },
