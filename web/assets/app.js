@@ -119,7 +119,7 @@ function welcomeHome(){
  const known=state.knownUser;
  return `<div class="onboard-grid">
  <section class="onboard-intro"><div class="eyebrow">EPET N.º 6 · SAN JUAN</div><div class="onboard-logo"><span class="gem"></span><span>Áurea</span></div><h1>Tu escuela, <em>en un solo lugar.</em></h1><p>Tu perfil, las evaluaciones y las notas, reunidos en un espacio personal. Ingresá para continuar con tu trayectoria académica.</p><div class="onboard-tags"><span>${icon('shield',16)} Cuenta segura</span><span>${icon('paper',16)} Evaluaciones</span><span>${icon('cap',16)} Tu educación</span></div><div class="onboard-orb" aria-hidden="true"></div></section>
- <section class="onboard-choice"><div class="eyebrow">BIENVENIDO A ÁUREA</div><h2>${known?'Qué bueno verte de nuevo':'Empezá tu experiencia'}</h2><p>${known?'Ya hay un usuario recordado en este dispositivo. Iniciá sesión para entrar al campus.':'Creá tu cuenta personal para poder acceder a tus evaluaciones y al resto de tu información escolar.'}</p><div class="onboard-actions">${known?`${button('Iniciar sesión','goto:login','primary')}${button('Crear otra cuenta','goto:register')}`:`${button('Crear mi cuenta','goto:register','primary')}${button('Ya tengo una cuenta','goto:login')}`}</div><div class="onboard-separator"><span>ACCESO ESCOLAR</span></div><div class="onboard-info">${icon('shield',17)}<span>Los profesores, preceptores y administración ingresan con las cuentas asignadas por la institución.</span></div></section>
+ <section class="onboard-choice"><div class="eyebrow">BIENVENIDO A ÁUREA</div><h2>${known?'Qué bueno verte de nuevo':'Empezá tu experiencia'}</h2><p>${known?'Ya hay un usuario recordado en este dispositivo. Iniciá sesión para entrar al campus.':'Creá tu cuenta personal para poder acceder a tus evaluaciones y al resto de tu información escolar.'}</p><div class="onboard-actions">${known?`${button('Iniciar sesión','goto:login','primary')}${button('Crear otra cuenta','goto:register')}`:`${button('Crear mi cuenta','goto:register','primary')}${button('Ya tengo una cuenta','goto:login')}${button('Ver Derecho Laboral de ejemplo','open-law-example','ghost')}`}</div><div class="onboard-separator"><span>ACCESO ESCOLAR</span></div><div class="onboard-info">${icon('shield',17)}<span>Los profesores, preceptores y administración ingresan con las cuentas asignadas por la institución.</span></div></section>
  </div>`;
 }
 function authShell(inner){
@@ -684,6 +684,7 @@ async function action(a,el){
  if(a==='show-subject'){go('subject',id);return;}
  if(a==='show-exam'){go('exam',id);return;}
  if(a==='show-public-exam'){go('public-exam',id);return;}
+ if(a==='open-law-example'){go('public-exam','a89f1840-b2f8-422c-8c69-ed8768550fa2');return;}
  if(a==='reload-profile'){state.routeFetched['grades:']=0;state.routeFetched['student-exams:']=0;if(access()==='student'||state.user?.platform_owner)await loadProfile();await loadMyProfile();draw();return;}if(a==='request-history'){const response=await users('claim_historic');toast(response.message||'Solicitud registrada');return;}
  if(['owner-rank','owner-verify','owner-unverify','owner-disable','owner-enable','owner-sessions','owner-claim-approve','owner-claim-reject'].includes(a)){
   if(!state.user?.platform_owner)throw Error('Solo la identidad Owner puede realizar esta operación.');
