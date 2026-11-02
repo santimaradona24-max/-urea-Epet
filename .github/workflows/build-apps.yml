@@ -44,7 +44,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      # El SDK Android ya viene preinstalado en ubuntu-latest.
+      # setup-android@v3 intentaba instalar el paquete obsoleto 'tools'.
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.13'
