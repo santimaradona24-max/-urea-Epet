@@ -1,0 +1,42 @@
+{
+  "name": "aurea-epet6",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Áurea — EPET N.º 6 para Windows",
+  "main": "main.js",
+  "author": "Proyecto Áurea EPET N.º 6",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "45.2.1",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "ar.edu.epet6.aurea",
+    "productName": "Áurea",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "Aurea-Setup-${version}-${arch}.${ext}",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Áurea"
+    }
+  }
+}
