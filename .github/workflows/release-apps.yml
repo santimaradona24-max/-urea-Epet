@@ -59,10 +59,10 @@ jobs:
           gradle-version: '8.13'
       - name: Compilar solo con clave privada estable
         env:
-          KS_BASE64: \${{ secrets.AUREA_ANDROID_KEYSTORE_B64 }}
-          AUREA_ANDROID_STORE_PASSWORD: \${{ secrets.AUREA_ANDROID_STORE_PASSWORD }}
-          AUREA_ANDROID_KEY_ALIAS: \${{ secrets.AUREA_ANDROID_KEY_ALIAS }}
-          AUREA_ANDROID_KEY_PASSWORD: \${{ secrets.AUREA_ANDROID_KEY_PASSWORD }}
+          KS_BASE64: ${{ secrets.AUREA_ANDROID_KEYSTORE_B64 }}
+          AUREA_ANDROID_STORE_PASSWORD: ${{ secrets.AUREA_ANDROID_STORE_PASSWORD }}
+          AUREA_ANDROID_KEY_ALIAS: ${{ secrets.AUREA_ANDROID_KEY_ALIAS }}
+          AUREA_ANDROID_KEY_PASSWORD: ${{ secrets.AUREA_ANDROID_KEY_PASSWORD }}
         shell: bash
         run: |
           set -euo pipefail
@@ -102,7 +102,7 @@ jobs:
           node-version: '22'
       - name: Publicar versión solo si aún no existe
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
