@@ -1,48 +1,5 @@
 'use strict';
-const { app, BrowserWindow, shell, dialog, ipcMain } = require('electron');
-const { autoUpdater } = require('electron-updater');
-const path = require('node:path');
-autoUpdater.autoDownload = false;
-autoUpdater.autoInstallOnAppQuit = false;
-let mainWindow = null;
-let downloadInProgress = false;
-let updateReady = false;
-let updateInfo = null;
-function notifyUpdate(status, detail = '') {
-  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('aurea:native-update', {status,detail});
-}
-async function examIsActive() {
-  if (!mainWindow || mainWindow.isDestroyed()) return true;
-  try { return await mainWindow.webContents.executeJavaScript("location.hash.startsWith('#/take') && sessionStorage.getItem('aurea_attempt') !== null"); }
-  catch (_) { return true; }
-}
-autoUpdater.on('update-available', (info) => {
-  updateInfo = info; notifyUpdate('available', String(info.version || ''));
-});
-autoUpdater.on('update-not-available', () => { updateInfo = null; });
-autoUpdater.on('download-progress', (progress) => {
-  notifyUpdate('progress', Math.round(progress.percent || 0));
-});
-autoUpdater.on('update-downloaded', () => {
-  updateReady = true; downloadInProgress = false;
-  notifyUpdate('ready', String(updateInfo?.version || ''));
-});
-autoUpdater.on('error', () => {
-  downloadInProgress = false;
-  if (updateInfo) notifyUpdate('error', 'No se pudo descargar la actualización.');
-});
-ipcMain.on('aurea:update:download', async (event) => {
-  if (event.sender !== mainWindow?.webContents || !updateInfo || downloadInProgress || await examIsActive()) return;
-  downloadInProgress = true;
-  notifyUpdate('progress', 0);
-  try { await autoUpdater.downloadUpdate(); }
-  catch (_) { downloadInProgress = false; notifyUpdate('error','Reintentá desde la aplicación.'); }
-});
-ipcMain.on('aurea:update:install', async (event) => {
-  if (event.sender !== mainWindow?.webContents || !updateReady || await examIsActive()) return;
-  autoUpdater.quitAndInstall(false, true);
-});
-
+const { app, BrowserWindow, shell, dialog } = require('electron');
 const { autoUpdater } = require('electron-updater');
 
 const HOME = 'https://aurea-epet6.vercel.app/';
@@ -60,14 +17,8 @@ function createWindow() {
     title: 'Áurea | EPET N.º 6',
     width: 1280, height: 820, minWidth: 800, minHeight: 560,
     show: true, autoHideMenuBar: true, backgroundColor: '#f9f5ec',
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), sandbox: true, nodeIntegration: false,
+    webPreferences: { sandbox: true, nodeIntegration: false,
       contextIsolation: true, webSecurity: true, spellcheck: true }
-  });
-
-  mainWindow = win;
-  win.webContents.on('did-finish-load', () => {
-    if (updateReady) notifyUpdate('ready', String(updateInfo?.version || ''));
-    else if (updateInfo) notifyUpdate(downloadInProgress?'progress':'available', String(updateInfo.version || ''));
   });
   win.webContents.setWindowOpenHandler(({url}) => {
     if (internal(url)) win.loadURL(url).catch(() => {});
@@ -94,10 +45,6 @@ function createWindow() {
     });
   });
   win.loadURL(HOME).catch(() => {});
-  if (app.isPackaged) {
-    setTimeout(() => autoUpdater.checkForUpdates().catch(() => {}), 4000);
-  }
-
   if (app.isPackaged) setupNativeUpdates(win);
 }
 
